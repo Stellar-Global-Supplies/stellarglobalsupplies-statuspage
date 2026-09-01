@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>System Status | Stellar Global Supplies</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="dot">SG</div>
+      <div class="brand-text">
+        <div class="title">Stellar Global Supplies</div>
+        <div class="subtitle">System Status</div>
+      </div>
+    </div>
+    <div class="top-links">
+      <a href="https://www.stellarglobalsupplies.com/" target="_blank" rel="noopener">Main Site ↗</a>
+      <a href="/admin.html">Admin</a>
+    </div>
+  </div>
+</header>
+
+<main>
+  <div class="overall-banner" id="overall-banner">
+    <div class="icon status-operational" id="overall-icon">✓</div>
+    <div>
+      <h1 id="overall-title">Checking status…</h1>
+      <p id="overall-sub">Loading current status</p>
+    </div>
+  </div>
+
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="incidents">Incidents</button>
+    <button class="tab-btn" data-tab="maintenance">Maintenance</button>
+    <button class="tab-btn" data-tab="uptime">Uptime (45 days)</button>
+  </div>
+
+  <section class="panel active" id="panel-incidents">
+    <div id="incidents-list"><div class="empty-state">Loading incidents…</div></div>
+  </section>
+
+  <section class="panel" id="panel-maintenance">
+    <div id="maintenance-list"><div class="empty-state">Loading maintenance windows…</div></div>
+  </section>
+
+  <section class="panel" id="panel-uptime">
+    <div class="card">
+      <div class="uptime-summary">
+        <span>Last 45 days</span>
+        <span><strong id="uptime-pct">--</strong>% uptime</span>
+      </div>
+      <div class="uptime-grid" id="uptime-grid"></div>
+      <div class="uptime-labels"><span>45 days ago</span><span>Today</span></div>
+      <div class="legend">
+        <span><i style="background:#00b98e"></i> Operational</span>
+        <span><i style="background:#3c8cf2"></i> Maintenance</span>
+        <span><i style="background:#f2a93c"></i> Degraded</span>
+        <span><i style="background:#e4483c"></i> Outage</span>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="foot">
+  Powered by a self-hosted status page on Cloudflare Workers, D1 &amp; KV · <a href="https://www.stellarglobalsupplies.com/" target="_blank" rel="noopener">stellarglobalsupplies.com</a>
+</footer>
+
+<script src="/app.js"></script>
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "stellar-status-page",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "wrangler dev",
+    "deploy": "wrangler deploy",
+    "db:migrate": "wrangler d1 execute stellar-status-db --file=./migrations/0001_init.sql",
+    "db:migrate:remote": "wrangler d1 execute stellar-status-db --remote --file=./migrations/0001_init.sql",
+    "tail": "wrangler tail"
+  },
+  "devDependencies": {
+    "wrangler": "^4.0.0"
+  },
+  "dependencies": {
+    "hono": "^4.6.0",
+    "jose": "^5.9.6"
+  }
+}

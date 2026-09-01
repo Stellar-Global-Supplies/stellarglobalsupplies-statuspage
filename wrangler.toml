@@ -1,0 +1,60 @@
+name = "stellar-status-page"
+main = "src/index.js"
+compatibility_date = "2025-04-01"
+compatibility_flags = ["nodejs_compat"]
+
+# Serves everything in /public as static assets, with the Worker
+# handling any request under /api/* (see [assets] not_found_handling below).
+[assets]
+directory = "./public"
+binding = "ASSETS"
+not_found_handling = "single-page-application"
+
+# ---- D1 Database -----------------------------------------------------
+# Create with: wrangler d1 create stellar-status-db
+# Then paste the returned database_id below.
+[[d1_databases]]
+binding = "DB"
+database_name = "stellar-status-db"
+database_id = "a08c23d2-c832-41da-b378-19e75909736c"
+
+# No cron trigger needed: /api/uptime already fills in any day with no
+# recorded incidents/maintenance as "operational" on the fly, so there's
+# nothing that needs a scheduled rollup job.
+
+# No KV namespace needed either: auth is now SSO via Supabase (see below)
+# instead of the old cookie/KV session store.
+
+# ---- Secrets Store bindings ---------------------------------------------
+# Create the store + secrets once (per account, reusable across Workers):
+#   wrangler secrets-store store create stellar-secrets --remote
+#   wrangler secrets-store secret create stellar-secrets --remote \
+#     --name github-webhook-secret --scopes workers
+#   wrangler secrets-store secret create stellar-secrets --remote \
+#     --name supabase-jwt-secret --scopes workers
+# Then bind them below (store_id comes from the `store create` output).
+# Access in code with `await env.GITHUB_WEBHOOK_SECRET.get()`.
+#
+# supabase-jwt-secret is only ever read for LEGACY (HS256) Supabase
+# projects. src/auth.js reads the alg out of each token's header and only
+# calls .get() on this binding when it sees "HS256" — for newer projects
+# using asymmetric Signing Keys (RS256/ES256), it verifies against
+# Supabase's public JWKS instead and this secret is never touched. If your
+# project is asymmetric-only, you can still create the binding but the
+# store value can be a dummy placeholder — it will simply never be read.
+[[secrets_store_secrets]]
+binding = "GITHUB_WEBHOOK_SECRET"
+store_id = "2556bcd9458349f6b4ff2a3fc93bdba1"
+secret_name = "github-webhook-secret"
+
+[[secrets_store_secrets]]
+binding = "SUPABASE_JWT_SECRET"
+store_id = "2556bcd9458349f6b4ff2a3fc93bdba1"
+secret_name = "supabase-jwt-secret"
+
+[vars]
+STATUS_PAGE_NAME = "Stellar Global Supplies"
+# Needed so we can fetch Supabase's JWKS for RS256/ES256 verification if
+# your project uses newer asymmetric Signing Keys instead of a legacy
+# shared JWT Secret. Not sensitive — safe as a plain var.
+SUPABASE_URL = "https://hwljdlgoysqaujzcnpeu.supabase.co"

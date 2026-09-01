@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Signing in… | Stellar Global Supplies Status</title>
+<link rel="stylesheet" href="/style.css" />
+<style>
+  .sso-page { min-height: 100vh; display: flex; align-items: center; justify-content: center; background: #F8FAFC; }
+  .sso-card { background: #fff; border-radius: 14px; border: 1px solid #E2E8F0; padding: 40px 36px; text-align: center; width: 360px; box-shadow: 0 4px 24px rgba(0,0,0,0.07); }
+  .sso-logo { display: flex; align-items: center; justify-content: center; gap: 10px; margin-bottom: 24px; }
+  .sso-logo-icon { width: 36px; height: 36px; border-radius: 8px; background: #00B98E; color: #fff; display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; }
+  .sso-logo-text { font-size: 16px; font-weight: 700; color: #0F172A; }
+  .sso-status { color: #64748B; font-size: 13px; margin-top: 12px; }
+  .sso-error-title { font-weight: 700; color: #0F172A; font-size: 15px; margin-bottom: 8px; }
+  .sso-error-msg { color: #64748B; font-size: 13px; margin-bottom: 20px; }
+  .sso-btn { display: inline-block; padding: 10px 28px; background: #00B98E; border-radius: 8px; color: #fff; font-size: 14px; font-weight: 600; text-decoration: none; }
+  .sso-spinner { width: 32px; height: 32px; border: 3px solid #E2E8F0; border-top-color: #00B98E; border-radius: 50%; animation: spin 0.8s linear infinite; margin: 16px auto; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+<div class="sso-page">
+  <div class="sso-card" id="sso-card">
+    <div class="sso-logo">
+      <span class="sso-logo-icon">SG</span>
+      <span class="sso-logo-text">Stellar Status</span>
+    </div>
+    <div id="sso-body">
+      <div class="sso-spinner"></div>
+      <p class="sso-status" id="sso-status-text">Verifying your session…</p>
+    </div>
+  </div>
+</div>
+
+<script src="/config.js"></script>
+<script type="module" src="/lib/supabase-client.js"></script>
+<script type="module" src="/sso-callback.js"></script>
+</body>
+</html>

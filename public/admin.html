@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Admin | Stellar Global Supplies Status</title>
+<link rel="stylesheet" href="/style.css" />
+</head>
+<body>
+<header class="top">
+  <div class="top-inner">
+    <div class="brand">
+      <div class="dot">SG</div>
+      <div class="brand-text">
+        <div class="title">Stellar Global Supplies</div>
+        <div class="subtitle">Status Admin</div>
+      </div>
+    </div>
+    <div class="top-links">
+      <a href="/">View Status Page</a>
+      <a href="#" id="logout-link" style="display:none">Sign out</a>
+    </div>
+  </div>
+</header>
+
+<div id="checking-view" class="login-box">
+  <h2>Checking your session…</h2>
+  <p style="color:var(--ink-soft);font-size:13px">Redirecting to the portal if you're not signed in.</p>
+</div>
+
+<div id="admin-view" class="admin-shell" style="display:none">
+
+  <div class="section-title">
+    <h2>New Incident</h2>
+  </div>
+  <div class="card">
+    <label>Title</label>
+    <input type="text" id="inc-title" placeholder="e.g. Website intermittently unreachable" />
+    <label>Impact</label>
+    <select id="inc-impact">
+      <option value="minor">Minor</option>
+      <option value="major">Major</option>
+      <option value="critical">Critical</option>
+    </select>
+    <label>Description</label>
+    <textarea id="inc-body" placeholder="What's happening?"></textarea>
+    <button class="primary" id="inc-create">Create Incident</button>
+  </div>
+
+  <div class="section-title">
+    <h2>New Maintenance</h2>
+  </div>
+  <div class="card">
+    <label>Title</label>
+    <input type="text" id="mnt-title" placeholder="e.g. Database upgrade" />
+    <label>Start</label>
+    <input type="datetime-local" id="mnt-start" />
+    <label>End</label>
+    <input type="datetime-local" id="mnt-end" />
+    <label>Description</label>
+    <textarea id="mnt-body" placeholder="What's being done?"></textarea>
+    <button class="primary" id="mnt-create">Schedule Maintenance</button>
+  </div>
+
+  <div class="section-title">
+    <h2>Open Incidents</h2>
+  </div>
+  <div id="admin-incidents"></div>
+
+  <div class="section-title">
+    <h2>Maintenance Windows</h2>
+  </div>
+  <div id="admin-maintenances"></div>
+
+  <div class="section-title">
+    <h2>GitHub Webhook</h2>
+  </div>
+  <div class="card">
+    <p style="font-size:13px;color:var(--ink-soft)">
+      Point a repo webhook at <code>POST /api/webhook/github</code> for the
+      <code>pull_request</code> and <code>issue_comment</code> events, with the
+      same secret as <code>GITHUB_WEBHOOK_SECRET</code>.<br/><br/>
+      Label a PR <strong>incident</strong> to open an incident, or
+      <strong>maintenance</strong> to schedule maintenance. PR comments become
+      timeline updates. Merging or closing the PR closes it out.
+    </p>
+  </div>
+</div>
+
+<script src="/config.js"></script>
+<script type="module" src="/lib/supabase-client.js"></script>
+<script type="module" src="/admin.js"></script>
+</body>
+</html>
