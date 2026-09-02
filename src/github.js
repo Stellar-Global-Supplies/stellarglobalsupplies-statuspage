@@ -133,6 +133,11 @@ async function handlePullRequest(env, payload) {
 async function handleIssueComment(env, payload) {
   const { action, issue, comment, repository } = payload;
   if (action !== "created" || !issue?.pull_request) return { ignored: true };
+
+  // Skip automated comments (CI bots, code-review bots, etc.) — only
+  // human comments should become status-page timeline updates.
+  if (isBotComment(comment)) return { ignored: true, reason: "bot comment" };
+
   const repo = repository.full_name;
   const prNumber = issue.number;
   const author = comment.user?.login;
@@ -153,4 +158,14 @@ async function handleIssueComment(env, payload) {
   }
 
   return { ignored: true };
+}
+
+function isBotComment(comment) {
+  const user = comment.user || {};
+  if (user.type === "Bot") return true;
+  if ((user.login || "").toLowerCase().endsWith("[bot]")) return true;
+  // A few common bot accounts that don't always self-report type: "Bot"
+  // depending on how they're installed (GitHub App vs. classic bot user).
+  const KNOWN_BOT_LOGINS = ["coderabbitai", "sonarqubecloud", "cloudflare-workers-and-pages", "codecov", "dependabot", "renovate"];
+  return KNOWN_BOT_LOGINS.some((known) => (user.login || "").toLowerCase().includes(known));
 }
