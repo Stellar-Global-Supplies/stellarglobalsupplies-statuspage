@@ -45,20 +45,12 @@
   <div id="subscribe-msg" class="subscribe-msg"></div>
 
   <div class="tabs">
-    <button class="tab-btn active" data-tab="incidents">Incidents</button>
+    <button class="tab-btn active" data-tab="apps">Apps &amp; Uptime</button>
+    <button class="tab-btn" data-tab="incidents">Incidents</button>
     <button class="tab-btn" data-tab="maintenance">Maintenance</button>
-    <button class="tab-btn" data-tab="apps">Apps &amp; Uptime</button>
   </div>
 
-  <section class="panel active" id="panel-incidents">
-    <div id="incidents-list"><div class="empty-state">Loading incidents…</div></div>
-  </section>
-
-  <section class="panel" id="panel-maintenance">
-    <div id="maintenance-list"><div class="empty-state">Loading maintenance windows…</div></div>
-  </section>
-
-  <section class="panel" id="panel-apps">
+  <section class="panel active" id="panel-apps">
     <div id="apps-list"><div class="empty-state">Checking apps…</div></div>
     <div class="legend">
       <span><i style="background:#00b98e"></i> Operational</span>
@@ -66,6 +58,14 @@
       <span><i style="background:#f2a93c"></i> Incident</span>
       <span><i style="background:#e4483c"></i> Outage (live check failed)</span>
     </div>
+  </section>
+
+  <section class="panel" id="panel-incidents">
+    <div id="incidents-list"><div class="empty-state">Loading incidents…</div></div>
+  </section>
+
+  <section class="panel" id="panel-maintenance">
+    <div id="maintenance-list"><div class="empty-state">Loading maintenance windows…</div></div>
   </section>
 </main>
 
