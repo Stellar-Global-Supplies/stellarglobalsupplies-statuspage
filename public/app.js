@@ -203,6 +203,6 @@ document.getElementById("subscribe-form").addEventListener("submit", async (e) =
 });
 
 loadOverall();
+loadApps();
 loadIncidents();
 loadMaintenance();
-loadApps();
