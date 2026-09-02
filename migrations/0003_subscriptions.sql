@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS subscribers (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
+-- Simple key/value settings store. Used for the Gmail OAuth app credentials:
+--   gmail_client_id, gmail_client_secret, gmail_refresh_token, gmail_sender_email
 CREATE TABLE IF NOT EXISTS settings (
   key TEXT PRIMARY KEY,
   value TEXT NOT NULL,

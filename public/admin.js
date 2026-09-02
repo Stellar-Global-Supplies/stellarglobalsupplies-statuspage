@@ -95,8 +95,9 @@ document.getElementById("inc-create").addEventListener("click", async () => {
   const title = document.getElementById("inc-title").value.trim();
   const impact = document.getElementById("inc-impact").value;
   const body = document.getElementById("inc-body").value.trim();
+  const appIds = getSelectedAppIds("inc-apps-picker");
   if (!title) return alert("Title is required");
-  await api("/api/admin/incidents", { method: "POST", body: JSON.stringify({ title, impact, body }) });
+  await api("/api/admin/incidents", { method: "POST", body: JSON.stringify({ title, impact, body, appIds }) });
   document.getElementById("inc-title").value = "";
   document.getElementById("inc-body").value = "";
   loadAdminIncidents();
@@ -107,12 +108,14 @@ document.getElementById("mnt-create").addEventListener("click", async () => {
   const start = document.getElementById("mnt-start").value;
   const end = document.getElementById("mnt-end").value;
   const body = document.getElementById("mnt-body").value.trim();
+  const appIds = getSelectedAppIds("mnt-apps-picker");
   if (!title || !start || !end) return alert("Title, start and end are required");
   await api("/api/admin/maintenances", {
     method: "POST",
     body: JSON.stringify({
       title,
       body,
+      appIds,
       scheduledStart: new Date(start).toISOString(),
       scheduledEnd: new Date(end).toISOString(),
     }),
@@ -240,6 +243,10 @@ document.getElementById("app-create").addEventListener("click", async () => {
 async function loadAdminApps() {
   const el = document.getElementById("admin-apps");
   const { apps } = await api("/api/admin/apps");
+
+  renderAppsPicker("inc-apps-picker", apps);
+  renderAppsPicker("mnt-apps-picker", apps);
+
   if (!apps.length) {
     el.innerHTML = '<div class="empty-state">No apps yet.</div>';
     return;
@@ -258,6 +265,39 @@ async function loadAdminApps() {
     </div>`
     )
     .join("");
+}
+
+// Renders "Site-wide" + one checkbox per app. Site-wide is checked by
+// default and, when checked, disables the individual app boxes (an
+// incident is either site-wide OR scoped to specific apps, not both).
+function renderAppsPicker(containerId, apps) {
+  const el = document.getElementById(containerId);
+  if (!apps.length) {
+    el.innerHTML = '<span class="empty-state" style="padding:8px 0">No apps yet — add one below first.</span>';
+    return;
+  }
+  el.innerHTML = `
+    <label><input type="checkbox" class="site-wide-toggle" checked /> Site-wide (affects all apps)</label>
+    <hr/>
+    ${apps
+      .map((a) => `<label><input type="checkbox" class="app-toggle" value="${a.id}" disabled /> ${escapeHtml(a.name)}</label>`)
+      .join("")}
+  `;
+  const siteWideBox = el.querySelector(".site-wide-toggle");
+  const appBoxes = el.querySelectorAll(".app-toggle");
+  siteWideBox.addEventListener("change", () => {
+    appBoxes.forEach((box) => {
+      box.disabled = siteWideBox.checked;
+      if (siteWideBox.checked) box.checked = false;
+    });
+  });
+}
+
+function getSelectedAppIds(containerId) {
+  const el = document.getElementById(containerId);
+  const siteWideBox = el.querySelector(".site-wide-toggle");
+  if (!siteWideBox || siteWideBox.checked) return []; // [] = site-wide
+  return [...el.querySelectorAll(".app-toggle:checked")].map((box) => Number(box.value));
 }
 
 window.toggleApp = async function (id, active) {

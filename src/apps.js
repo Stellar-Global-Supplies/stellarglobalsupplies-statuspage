@@ -3,6 +3,14 @@ import { last45DayList, todayUTC } from "./utils.js";
 const DEFAULT_CHECK_INTERVAL_SECONDS = 120;
 const CHECK_TIMEOUT_MS = 8000;
 
+function slugify(name) {
+  return name
+    .toLowerCase()
+    .trim()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "");
+}
+
 export async function listApps(env, { onlyActive = false } = {}) {
   const query = onlyActive
     ? "SELECT * FROM apps WHERE active = 1 ORDER BY sort_order ASC, id ASC"
@@ -12,12 +20,33 @@ export async function listApps(env, { onlyActive = false } = {}) {
 }
 
 export async function createApp(env, { name, url, sortOrder = 0 }) {
+  const baseSlug = slugify(name) || "app";
+  let slug = baseSlug;
+  let n = 2;
+  // Handle rare slug collisions (two apps with very similar names).
+  while (await env.DB.prepare("SELECT 1 FROM apps WHERE slug = ?").bind(slug).first()) {
+    slug = `${baseSlug}-${n++}`;
+  }
   const res = await env.DB.prepare(
-    "INSERT INTO apps (name, url, sort_order) VALUES (?, ?, ?)"
+    "INSERT INTO apps (name, url, sort_order, slug) VALUES (?, ?, ?, ?)"
   )
-    .bind(name, url, sortOrder)
+    .bind(name, url, sortOrder, slug)
     .run();
   return res.meta.last_row_id;
+}
+
+// Resolves PR labels like "app:orders-frontend" to app IDs, for the
+// GitHub webhook. Unknown slugs are silently skipped (not an error) so a
+// typo'd label just doesn't scope the incident rather than failing it.
+export async function findAppIdsBySlugs(env, slugs) {
+  if (!slugs.length) return [];
+  const placeholders = slugs.map(() => "?").join(",");
+  const { results } = await env.DB.prepare(
+    `SELECT id FROM apps WHERE slug IN (${placeholders})`
+  )
+    .bind(...slugs)
+    .all();
+  return (results || []).map((r) => r.id);
 }
 
 export async function updateApp(env, id, { name, url, active, sortOrder }) {
@@ -129,16 +158,24 @@ export async function getAppUptime45(env, appId) {
   const [{ results: statusRows }, { results: incidentRows }, { results: maintRows }] = await Promise.all([
     env.DB.prepare("SELECT * FROM app_daily_status WHERE app_id = ? AND date >= ?").bind(appId, windowStart).all(),
     env.DB.prepare(
-      `SELECT * FROM incidents WHERE (app_id = ? OR app_id IS NULL) AND
-       (resolved_at IS NULL OR resolved_at >= ?) AND created_at <= ?`
+      `SELECT i.* FROM incidents i
+       WHERE (i.resolved_at IS NULL OR i.resolved_at >= ?) AND i.created_at <= ?
+       AND (
+         NOT EXISTS (SELECT 1 FROM incident_apps ia WHERE ia.incident_id = i.id)
+         OR EXISTS (SELECT 1 FROM incident_apps ia WHERE ia.incident_id = i.id AND ia.app_id = ?)
+       )`
     )
-      .bind(appId, windowStart, new Date().toISOString())
+      .bind(windowStart, new Date().toISOString(), appId)
       .all(),
     env.DB.prepare(
-      `SELECT * FROM maintenances WHERE (app_id = ? OR app_id IS NULL) AND
-       scheduled_end >= ? AND scheduled_start <= ?`
+      `SELECT m.* FROM maintenances m
+       WHERE m.scheduled_end >= ? AND m.scheduled_start <= ?
+       AND (
+         NOT EXISTS (SELECT 1 FROM maintenance_apps ma WHERE ma.maintenance_id = m.id)
+         OR EXISTS (SELECT 1 FROM maintenance_apps ma WHERE ma.maintenance_id = m.id AND ma.app_id = ?)
+       )`
     )
-      .bind(appId, windowStart, new Date().toISOString())
+      .bind(windowStart, new Date().toISOString(), appId)
       .all(),
   ]);
 

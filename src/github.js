@@ -9,9 +9,11 @@ import {
   resolveIncident,
   completeMaintenance,
 } from "./status.js";
+import { findAppIdsBySlugs } from "./apps.js";
 
 const INCIDENT_LABEL = "incident";
 const MAINTENANCE_LABEL = "maintenance";
+const APP_LABEL_PREFIX = "app:";
 
 export async function verifySignature(request, rawBody, secret) {
   const header = request.headers.get("x-hub-signature-256") || "";
@@ -23,6 +25,16 @@ export async function verifySignature(request, rawBody, secret) {
 
 function hasLabel(pr, name) {
   return (pr.labels || []).some((l) => l.name?.toLowerCase() === name);
+}
+
+// "app:orders-frontend" -> "orders-frontend". Multiple app: labels on the
+// same PR scope the incident/maintenance to all of them.
+function appSlugsFromLabels(pr) {
+  return (pr.labels || [])
+    .map((l) => (l.name || "").toLowerCase())
+    .filter((name) => name.startsWith(APP_LABEL_PREFIX))
+    .map((name) => name.slice(APP_LABEL_PREFIX.length))
+    .filter(Boolean);
 }
 
 // Very small heuristic to bump an incident's status based on comment text,
@@ -65,6 +77,8 @@ async function handlePullRequest(env, payload) {
   if (action === "opened" || action === "reopened" || action === "labeled") {
     const isIncident = hasLabel(pr, INCIDENT_LABEL);
     const isMaintenance = hasLabel(pr, MAINTENANCE_LABEL);
+    const appSlugs = appSlugsFromLabels(pr);
+    const appIds = appSlugs.length ? await findAppIdsBySlugs(env, appSlugs) : [];
 
     if (isIncident) {
       const existing = await findIncidentByPR(env, repo, prNumber);
@@ -78,6 +92,7 @@ async function handlePullRequest(env, payload) {
           prNumber,
           prUrl,
           author,
+          appIds,
         });
         return { created: "incident", id };
       }
@@ -94,6 +109,7 @@ async function handlePullRequest(env, payload) {
           prNumber,
           prUrl,
           author,
+          appIds,
           scheduledStart: new Date().toISOString(),
           scheduledEnd: new Date(Date.now() + 2 * 3600 * 1000).toISOString(),
         });

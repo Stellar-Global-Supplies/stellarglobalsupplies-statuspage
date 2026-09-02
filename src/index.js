@@ -167,7 +167,7 @@ app.post("/api/admin/incidents", async (c) => {
     body: body.body || "",
     impact: body.impact || "minor",
     componentId: body.componentId || null,
-    appId: body.appId || null,
+    appIds: Array.isArray(body.appIds) ? body.appIds : [],
     source: "admin",
     author: user.email,
   });
@@ -213,7 +213,7 @@ app.post("/api/admin/maintenances", async (c) => {
     title: body.title,
     body: body.body || "",
     componentId: body.componentId || null,
-    appId: body.appId || null,
+    appIds: Array.isArray(body.appIds) ? body.appIds : [],
     scheduledStart: body.scheduledStart,
     scheduledEnd: body.scheduledEnd,
     source: "admin",

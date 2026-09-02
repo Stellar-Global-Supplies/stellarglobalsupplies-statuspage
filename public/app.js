@@ -44,6 +44,11 @@ async function loadOverall() {
   }
 }
 
+function renderAppChips(apps) {
+  if (!apps || !apps.length) return '<span class="app-chip">Site-wide</span>';
+  return apps.map((a) => `<span class="app-chip">${escapeHtml(a.name)}</span>`).join("");
+}
+
 function renderUpdates(updates) {
   if (!updates || !updates.length) return "";
   return `<div class="updates">${updates
@@ -76,6 +81,7 @@ async function loadIncidents() {
               <span class="badge ${i.impact}">${i.impact}</span>
               Opened ${fmtDate(i.created_at)}${i.source === "github" ? '<span class="pill-source">GitHub PR #' + i.pr_number + "</span>" : ""}
             </div>
+            <div style="margin-bottom:8px">${renderAppChips(full.apps)}</div>
             ${renderUpdates(full.updates)}
           </div>`;
         })
@@ -105,6 +111,7 @@ async function loadMaintenance() {
               ${fmtDate(m.scheduled_start)} → ${fmtDate(m.scheduled_end)}
               ${m.source === "github" ? '<span class="pill-source">GitHub PR #' + m.pr_number + "</span>" : ""}
             </div>
+            <div style="margin-bottom:8px">${renderAppChips(full.apps)}</div>
             ${renderUpdates(full.updates)}
           </div>`;
         })

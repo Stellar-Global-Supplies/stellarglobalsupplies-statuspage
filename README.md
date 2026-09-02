@@ -47,6 +47,7 @@ wrangler.toml                    Worker + D1 + Secrets Store config
 migrations/0001_init.sql         Core schema: incidents, maintenances, components
 migrations/0002_apps.sql         Monitored apps + per-app daily status
 migrations/0003_subscriptions.sql Email subscribers + Gmail settings (D1)
+migrations/0004_app_scoping.sql  App slugs + incident/maintenance-to-app join tables
 src/index.js                     Hono app: all routes + email notification wiring
 src/status.js                    Incidents/maintenance data access
 src/apps.js                      App CRUD, live health-check, per-app uptime series
@@ -172,15 +173,28 @@ Store binding and drop the admin-panel save flow in favor of
 ## 4. Onboard apps to monitor
 
 In the admin panel's **Monitored Apps** card, add a name + URL for each app
-(e.g. "Orders Frontend" → `https://orders.stellarglobalsupplies.com`).
-It'll appear on the public status page's **Apps & Uptime** tab immediately,
-starting in an "unknown" state until its first check fires (on the next
-status-page view). Pause/Delete are available per-app in the same panel.
+(e.g. "Orders Frontend" → `https://orders.stellarglobalsupplies.com`). Each
+app is automatically given a **slug** (e.g. `orders-frontend`) derived from
+its name. It'll appear on the public status page's **Apps & Uptime** tab
+immediately, starting in an "unknown" state until its first check fires (on
+the next status-page view). Pause/Delete are available per-app in the same
+panel.
 
-Incidents/maintenance created from the admin panel can optionally target a
-specific app (`appId` in the POST body) instead of the whole site — pass
-that from a future UI enhancement, or via direct API calls; it defaults to
-site-wide (shown against every app's bar) if omitted.
+### Scoping incidents/maintenance to specific apps
+
+By default, every incident/maintenance is **site-wide** — it shows on
+every app's uptime bar (orange for incidents, blue for maintenance). To
+scope one to just certain apps instead:
+
+- **From the admin panel**: uncheck "Site-wide" in the "Affected apps"
+  picker on the incident/maintenance form and tick the specific app(s).
+- **From GitHub**: add a label like `app:orders-frontend` to the PR (the
+  slug after `app:` must match an app's slug exactly). Multiple `app:`
+  labels scope it to multiple apps. No `app:` label → site-wide, same as
+  before.
+
+An incident/maintenance's affected apps are shown as chips on its card on
+the public status page.
 
 ## 5. Run locally / deploy
 
@@ -206,7 +220,10 @@ by repo). Either way: **Settings → Webhooks → Add webhook**
 - Events: select **Pull requests** and **Issue comments**
 
 Create `incident` and `maintenance` labels on each repo that should be able
-to trigger this (GitHub labels aren't shared org-wide by default). Then:
+to trigger this (GitHub labels aren't shared org-wide by default). Add an
+`app:<slug>` label too (e.g. `app:orders-frontend`) if the PR should scope
+to a specific app instead of site-wide — see "Scoping incidents/maintenance
+to specific apps" above.
 
 1. Open a PR and add the `incident` (or `maintenance`) label → the status
    page shows it immediately, and subscribers get an email.

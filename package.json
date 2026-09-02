@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "wrangler dev",
     "deploy": "wrangler deploy",
-    "db:migrate": "wrangler d1 execute stellar-status-db --file=./migrations/0001_init.sql && wrangler d1 execute stellar-status-db --file=./migrations/0002_apps.sql && wrangler d1 execute stellar-status-db --file=./migrations/0003_subscriptions.sql",
-    "db:migrate:remote": "wrangler d1 execute stellar-status-db --remote --file=./migrations/0001_init.sql && wrangler d1 execute stellar-status-db --remote --file=./migrations/0002_apps.sql && wrangler d1 execute stellar-status-db --remote --file=./migrations/0003_subscriptions.sql",
+    "db:migrate": "wrangler d1 execute stellar-status-db --file=./migrations/0001_init.sql && wrangler d1 execute stellar-status-db --file=./migrations/0002_apps.sql && wrangler d1 execute stellar-status-db --file=./migrations/0003_subscriptions.sql && wrangler d1 execute stellar-status-db --file=./migrations/0004_app_scoping.sql",
+    "db:migrate:remote": "wrangler d1 execute stellar-status-db --remote --file=./migrations/0001_init.sql && wrangler d1 execute stellar-status-db --remote --file=./migrations/0002_apps.sql && wrangler d1 execute stellar-status-db --remote --file=./migrations/0003_subscriptions.sql && wrangler d1 execute stellar-status-db --remote --file=./migrations/0004_app_scoping.sql",
     "tail": "wrangler tail"
   },
   "devDependencies": {

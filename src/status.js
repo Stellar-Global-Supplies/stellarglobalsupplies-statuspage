@@ -33,6 +33,7 @@ export async function getIncidentWithUpdates(env, id) {
     .bind(id)
     .all();
   incident.updates = results || [];
+  incident.apps = await getIncidentApps(env, id); // [] = site-wide
   return incident;
 }
 
@@ -45,6 +46,7 @@ export async function getMaintenanceWithUpdates(env, id) {
     .bind(id)
     .all();
   m.updates = results || [];
+  m.apps = await getMaintenanceApps(env, id); // [] = site-wide
   return m;
 }
 
@@ -61,17 +63,35 @@ export async function findMaintenanceByPR(env, repo, prNumber) {
 }
 
 export async function createIncident(env, data) {
-  const { title, impact = "minor", body = "", componentId = null, appId = null, source = "admin", repo = null, prNumber = null, prUrl = null } = data;
+  const { title, impact = "minor", body = "", componentId = null, appIds = [], source = "admin", repo = null, prNumber = null, prUrl = null } = data;
   const res = await env.DB.prepare(
-    `INSERT INTO incidents (title, status, impact, component_id, app_id, body, source, repo, pr_number, pr_url)
-     VALUES (?, 'investigating', ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO incidents (title, status, impact, component_id, body, source, repo, pr_number, pr_url)
+     VALUES (?, 'investigating', ?, ?, ?, ?, ?, ?, ?)`
   )
-    .bind(title, impact, componentId, appId, body, source, repo, prNumber, prUrl)
+    .bind(title, impact, componentId, body, source, repo, prNumber, prUrl)
     .run();
   const id = res.meta.last_row_id;
+  await attachIncidentApps(env, id, appIds);
   await addIncidentUpdate(env, id, { status: "investigating", message: body || "Incident opened.", source, author: data.author });
   await touchDailyStatus(env, "outage_or_degraded", impact);
   return id;
+}
+
+export async function attachIncidentApps(env, incidentId, appIds = []) {
+  for (const appId of appIds) {
+    await env.DB.prepare("INSERT OR IGNORE INTO incident_apps (incident_id, app_id) VALUES (?, ?)")
+      .bind(incidentId, appId)
+      .run();
+  }
+}
+
+export async function getIncidentApps(env, incidentId) {
+  const { results } = await env.DB.prepare(
+    `SELECT a.id, a.name FROM apps a JOIN incident_apps ia ON ia.app_id = a.id WHERE ia.incident_id = ?`
+  )
+    .bind(incidentId)
+    .all();
+  return results || [];
 }
 
 export async function addIncidentUpdate(env, incidentId, { status, message, author = null, source = "admin" }) {
@@ -97,7 +117,7 @@ export async function createMaintenance(env, data) {
     title,
     body = "",
     componentId = null,
-    appId = null,
+    appIds = [],
     source = "admin",
     repo = null,
     prNumber = null,
@@ -106,14 +126,32 @@ export async function createMaintenance(env, data) {
     scheduledEnd = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
   } = data;
   const res = await env.DB.prepare(
-    `INSERT INTO maintenances (title, status, component_id, app_id, body, scheduled_start, scheduled_end, source, repo, pr_number, pr_url)
-     VALUES (?, 'scheduled', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO maintenances (title, status, component_id, body, scheduled_start, scheduled_end, source, repo, pr_number, pr_url)
+     VALUES (?, 'scheduled', ?, ?, ?, ?, ?, ?, ?, ?)`
   )
-    .bind(title, componentId, appId, body, scheduledStart, scheduledEnd, source, repo, prNumber, prUrl)
+    .bind(title, componentId, body, scheduledStart, scheduledEnd, source, repo, prNumber, prUrl)
     .run();
   const id = res.meta.last_row_id;
+  await attachMaintenanceApps(env, id, appIds);
   await addMaintenanceUpdate(env, id, { status: "scheduled", message: body || "Maintenance scheduled.", source, author: data.author });
   return id;
+}
+
+export async function attachMaintenanceApps(env, maintenanceId, appIds = []) {
+  for (const appId of appIds) {
+    await env.DB.prepare("INSERT OR IGNORE INTO maintenance_apps (maintenance_id, app_id) VALUES (?, ?)")
+      .bind(maintenanceId, appId)
+      .run();
+  }
+}
+
+export async function getMaintenanceApps(env, maintenanceId) {
+  const { results } = await env.DB.prepare(
+    `SELECT a.id, a.name FROM apps a JOIN maintenance_apps ma ON ma.app_id = a.id WHERE ma.maintenance_id = ?`
+  )
+    .bind(maintenanceId)
+    .all();
+  return results || [];
 }
 
 export async function addMaintenanceUpdate(env, maintenanceId, { status, message, author = null, source = "admin" }) {
