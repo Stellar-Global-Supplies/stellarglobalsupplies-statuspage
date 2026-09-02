@@ -32,10 +32,22 @@
     </div>
   </div>
 
+  <div class="subscribe-box card">
+    <div>
+      <strong>Get notified</strong>
+      <p style="margin:2px 0 0;font-size:12px;color:var(--ink-soft)">Email updates when there's an incident or scheduled maintenance.</p>
+    </div>
+    <form id="subscribe-form">
+      <input type="email" id="subscribe-email" placeholder="you@company.com" required />
+      <button type="submit" class="primary" id="subscribe-btn">Subscribe</button>
+    </form>
+  </div>
+  <div id="subscribe-msg" class="subscribe-msg"></div>
+
   <div class="tabs">
     <button class="tab-btn active" data-tab="incidents">Incidents</button>
     <button class="tab-btn" data-tab="maintenance">Maintenance</button>
-    <button class="tab-btn" data-tab="uptime">Uptime (45 days)</button>
+    <button class="tab-btn" data-tab="apps">Apps &amp; Uptime</button>
   </div>
 
   <section class="panel active" id="panel-incidents">
@@ -46,20 +58,13 @@
     <div id="maintenance-list"><div class="empty-state">Loading maintenance windows…</div></div>
   </section>
 
-  <section class="panel" id="panel-uptime">
-    <div class="card">
-      <div class="uptime-summary">
-        <span>Last 45 days</span>
-        <span><strong id="uptime-pct">--</strong>% uptime</span>
-      </div>
-      <div class="uptime-grid" id="uptime-grid"></div>
-      <div class="uptime-labels"><span>45 days ago</span><span>Today</span></div>
-      <div class="legend">
-        <span><i style="background:#00b98e"></i> Operational</span>
-        <span><i style="background:#3c8cf2"></i> Maintenance</span>
-        <span><i style="background:#f2a93c"></i> Degraded</span>
-        <span><i style="background:#e4483c"></i> Outage</span>
-      </div>
+  <section class="panel" id="panel-apps">
+    <div id="apps-list"><div class="empty-state">Checking apps…</div></div>
+    <div class="legend">
+      <span><i style="background:#00b98e"></i> Operational</span>
+      <span><i style="background:#3c8cf2"></i> Maintenance</span>
+      <span><i style="background:#f2a93c"></i> Incident</span>
+      <span><i style="background:#e4483c"></i> Outage (live check failed)</span>
     </div>
   </section>
 </main>

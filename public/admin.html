@@ -73,6 +73,39 @@
   <div id="admin-maintenances"></div>
 
   <div class="section-title">
+    <h2>Monitored Apps</h2>
+  </div>
+  <div class="card">
+    <label>Name</label>
+    <input type="text" id="app-name" placeholder="e.g. Orders Frontend" />
+    <label>URL</label>
+    <input type="text" id="app-url" placeholder="https://orders.stellarglobalsupplies.com" />
+    <button class="primary" id="app-create">Add App</button>
+  </div>
+  <div id="admin-apps"></div>
+
+  <div class="section-title">
+    <h2>Email Notifications (Gmail)</h2>
+  </div>
+  <div class="card">
+    <p style="font-size:13px;color:var(--ink-soft);margin-top:0" id="gmail-status">Checking configuration…</p>
+    <label>Gmail OAuth Client ID</label>
+    <input type="text" id="gmail-client-id" placeholder="xxxx.apps.googleusercontent.com" />
+    <label>Gmail OAuth Client Secret</label>
+    <input type="text" id="gmail-client-secret" placeholder="GOCSPX-…" />
+    <label>Refresh Token</label>
+    <input type="text" id="gmail-refresh-token" placeholder="1//0g…" />
+    <label>Sender Email</label>
+    <input type="text" id="gmail-sender-email" placeholder="status@stellarglobalsupplies.com" />
+    <button class="primary" id="gmail-save">Save Gmail Settings</button>
+    <p style="font-size:11px;color:var(--ink-soft);margin-top:10px">
+      Stored in D1. Get these from a Google Cloud OAuth client (Desktop app
+      type is easiest for generating a refresh token) with the
+      <code>gmail.send</code> scope authorized for the sender account.
+    </p>
+  </div>
+
+  <div class="section-title">
     <h2>GitHub Webhook</h2>
   </div>
   <div class="card">

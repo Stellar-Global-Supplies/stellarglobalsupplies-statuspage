@@ -31,6 +31,8 @@ function showAdmin() {
   document.getElementById("logout-link").style.display = "inline";
   loadAdminIncidents();
   loadAdminMaintenances();
+  loadAdminApps();
+  loadGmailSettings();
 }
 
 async function signOut() {
@@ -218,5 +220,93 @@ window.completeMaintenance = async function (id) {
   await api(`/api/admin/maintenances/${id}/complete`, { method: "POST", body: JSON.stringify({ message: "Completed." }) });
   loadAdminMaintenances();
 };
+
+// --- Monitored apps -------------------------------------------------------
+
+document.getElementById("app-create").addEventListener("click", async () => {
+  const name = document.getElementById("app-name").value.trim();
+  const url = document.getElementById("app-url").value.trim();
+  if (!name || !url) return alert("Name and URL are required");
+  try {
+    await api("/api/admin/apps", { method: "POST", body: JSON.stringify({ name, url }) });
+    document.getElementById("app-name").value = "";
+    document.getElementById("app-url").value = "";
+    loadAdminApps();
+  } catch (e) {
+    alert(e.message);
+  }
+});
+
+async function loadAdminApps() {
+  const el = document.getElementById("admin-apps");
+  const { apps } = await api("/api/admin/apps");
+  if (!apps.length) {
+    el.innerHTML = '<div class="empty-state">No apps yet.</div>';
+    return;
+  }
+  el.innerHTML = apps
+    .map(
+      (a) => `<div class="card">
+      <h3>${escapeHtml(a.name)} ${a.active ? "" : '<span class="pill-source">Paused</span>'}</h3>
+      <div class="meta">
+        ${escapeHtml(a.url)}<br/>
+        Last check: <span class="badge ${a.last_status === "operational" ? "resolved" : a.last_status === "outage" ? "critical" : "scheduled"}">${a.last_status}</span>
+        ${a.last_checked_at ? fmtDate(a.last_checked_at) : "never"}
+      </div>
+      <button class="secondary" onclick="toggleApp(${a.id}, ${a.active ? 0 : 1})">${a.active ? "Pause" : "Resume"}</button>
+      <button class="secondary" onclick="deleteAppRow(${a.id})">Delete</button>
+    </div>`
+    )
+    .join("");
+}
+
+window.toggleApp = async function (id, active) {
+  await api(`/api/admin/apps/${id}`, { method: "PATCH", body: JSON.stringify({ active: !!active }) });
+  loadAdminApps();
+};
+
+window.deleteAppRow = async function (id) {
+  if (!confirm("Delete this app? Its uptime history will be removed too.")) return;
+  await api(`/api/admin/apps/${id}`, { method: "DELETE" });
+  loadAdminApps();
+};
+
+// --- Gmail settings ---------------------------------------------------
+
+async function loadGmailSettings() {
+  const statusEl = document.getElementById("gmail-status");
+  try {
+    const s = await api("/api/admin/settings/gmail");
+    statusEl.textContent = s.configured
+      ? `Configured (sending as ${s.senderEmail}). ${s.subscriberCount} subscriber(s).`
+      : `Not configured yet. ${s.subscriberCount} subscriber(s) waiting.`;
+  } catch {
+    statusEl.textContent = "Could not load Gmail configuration status.";
+  }
+}
+
+document.getElementById("gmail-save").addEventListener("click", async () => {
+  const clientId = document.getElementById("gmail-client-id").value.trim();
+  const clientSecret = document.getElementById("gmail-client-secret").value.trim();
+  const refreshToken = document.getElementById("gmail-refresh-token").value.trim();
+  const senderEmail = document.getElementById("gmail-sender-email").value.trim();
+  if (!clientId || !clientSecret || !refreshToken || !senderEmail) {
+    return alert("All four Gmail fields are required");
+  }
+  try {
+    await api("/api/admin/settings/gmail", {
+      method: "POST",
+      body: JSON.stringify({ clientId, clientSecret, refreshToken, senderEmail }),
+    });
+    document.getElementById("gmail-client-id").value = "";
+    document.getElementById("gmail-client-secret").value = "";
+    document.getElementById("gmail-refresh-token").value = "";
+    document.getElementById("gmail-sender-email").value = "";
+    loadGmailSettings();
+    alert("Gmail settings saved.");
+  } catch (e) {
+    alert(e.message);
+  }
+});
 
 bootstrap();

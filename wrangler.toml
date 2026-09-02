@@ -58,3 +58,9 @@ STATUS_PAGE_NAME = "Stellar Global Supplies"
 # your project uses newer asymmetric Signing Keys instead of a legacy
 # shared JWT Secret. Not sensitive — safe as a plain var.
 SUPABASE_URL = "https://hwljdlgoysqaujzcnpeu.supabase.co"
+# Minimum seconds between live health-checks of any one app (checks run
+# on status-page view, throttled per-app so a burst of visits doesn't
+# hammer the target URLs).
+CHECK_INTERVAL_SECONDS = "120"
+# Used to build the unsubscribe link inside notification emails.
+PUBLIC_BASE_URL = "https://status.stellarglobalsupplies.com"

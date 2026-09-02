@@ -61,12 +61,12 @@ export async function findMaintenanceByPR(env, repo, prNumber) {
 }
 
 export async function createIncident(env, data) {
-  const { title, impact = "minor", body = "", componentId = null, source = "admin", repo = null, prNumber = null, prUrl = null } = data;
+  const { title, impact = "minor", body = "", componentId = null, appId = null, source = "admin", repo = null, prNumber = null, prUrl = null } = data;
   const res = await env.DB.prepare(
-    `INSERT INTO incidents (title, status, impact, component_id, body, source, repo, pr_number, pr_url)
-     VALUES (?, 'investigating', ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO incidents (title, status, impact, component_id, app_id, body, source, repo, pr_number, pr_url)
+     VALUES (?, 'investigating', ?, ?, ?, ?, ?, ?, ?, ?)`
   )
-    .bind(title, impact, componentId, body, source, repo, prNumber, prUrl)
+    .bind(title, impact, componentId, appId, body, source, repo, prNumber, prUrl)
     .run();
   const id = res.meta.last_row_id;
   await addIncidentUpdate(env, id, { status: "investigating", message: body || "Incident opened.", source, author: data.author });
@@ -97,6 +97,7 @@ export async function createMaintenance(env, data) {
     title,
     body = "",
     componentId = null,
+    appId = null,
     source = "admin",
     repo = null,
     prNumber = null,
@@ -105,10 +106,10 @@ export async function createMaintenance(env, data) {
     scheduledEnd = new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
   } = data;
   const res = await env.DB.prepare(
-    `INSERT INTO maintenances (title, status, component_id, body, scheduled_start, scheduled_end, source, repo, pr_number, pr_url)
-     VALUES (?, 'scheduled', ?, ?, ?, ?, ?, ?, ?, ?)`
+    `INSERT INTO maintenances (title, status, component_id, app_id, body, scheduled_start, scheduled_end, source, repo, pr_number, pr_url)
+     VALUES (?, 'scheduled', ?, ?, ?, ?, ?, ?, ?, ?, ?)`
   )
-    .bind(title, componentId, body, scheduledStart, scheduledEnd, source, repo, prNumber, prUrl)
+    .bind(title, componentId, appId, body, scheduledStart, scheduledEnd, source, repo, prNumber, prUrl)
     .run();
   const id = res.meta.last_row_id;
   await addMaintenanceUpdate(env, id, { status: "scheduled", message: body || "Maintenance scheduled.", source, author: data.author });

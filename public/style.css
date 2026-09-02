@@ -206,6 +206,32 @@ main {
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .legend i { width: 10px; height: 10px; border-radius: 3px; display: inline-block; }
 
+.subscribe-box {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+.subscribe-box form {
+  display: flex;
+  gap: 8px;
+}
+.subscribe-box input[type=email] {
+  width: 220px;
+}
+.subscribe-box button {
+  margin-top: 0;
+  white-space: nowrap;
+}
+.subscribe-msg {
+  font-size: 12px;
+  margin: -8px 0 14px;
+  min-height: 16px;
+}
+.subscribe-msg.success { color: var(--ok); }
+.subscribe-msg.error { color: var(--critical); }
+
 footer.foot {
   text-align: center;
   font-size: 12px;

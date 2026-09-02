@@ -29,11 +29,11 @@ WHERE NOT EXISTS (SELECT 1 FROM components WHERE name = 'Product Catalogue');
 CREATE TABLE IF NOT EXISTS incidents (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'investigating', 
-  impact TEXT NOT NULL DEFAULT 'minor',          
+  status TEXT NOT NULL DEFAULT 'investigating', -- investigating | identified | monitoring | resolved
+  impact TEXT NOT NULL DEFAULT 'minor',          -- minor | major | critical
   component_id INTEGER REFERENCES components(id),
   body TEXT,
-  source TEXT NOT NULL DEFAULT 'admin',          
+  source TEXT NOT NULL DEFAULT 'admin',          -- admin | github
   repo TEXT,
   pr_number INTEGER,
   pr_url TEXT,
@@ -55,7 +55,7 @@ CREATE TABLE IF NOT EXISTS incident_updates (
 CREATE TABLE IF NOT EXISTS maintenances (
   id INTEGER PRIMARY KEY AUTOINCREMENT,
   title TEXT NOT NULL,
-  status TEXT NOT NULL DEFAULT 'scheduled',
+  status TEXT NOT NULL DEFAULT 'scheduled', -- scheduled | in_progress | completed | cancelled
   component_id INTEGER REFERENCES components(id),
   body TEXT,
   scheduled_start TEXT NOT NULL,
@@ -79,10 +79,10 @@ CREATE TABLE IF NOT EXISTS maintenance_updates (
   created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-
+-- One row per calendar day, used to render the 45-day uptime bar.
 CREATE TABLE IF NOT EXISTS daily_status (
-  date TEXT PRIMARY KEY,             
-  status TEXT NOT NULL DEFAULT 'operational', 
+  date TEXT PRIMARY KEY,             -- YYYY-MM-DD (UTC)
+  status TEXT NOT NULL DEFAULT 'operational', -- operational | degraded | outage | maintenance
   incident_count INTEGER NOT NULL DEFAULT 0,
   worst_impact TEXT
 );

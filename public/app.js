@@ -14,8 +14,8 @@ const ICONS = {
   maintenance: "⚙",
 };
 
-async function fetchJSON(url) {
-  const res = await fetch(url);
+async function fetchJSON(url, opts) {
+  const res = await fetch(url, opts);
   if (!res.ok) throw new Error(`${url} -> ${res.status}`);
   return res.json();
 }
@@ -115,16 +115,58 @@ async function loadMaintenance() {
   }
 }
 
-async function loadUptime() {
+const APP_STATUS_LABEL = { operational: "Operational", outage: "Outage", degraded: "Incident", maintenance: "Maintenance", unknown: "Checking…" };
+
+function appStatusClass(status) {
+  // Reuses the same badge palette: minor=green-ish, major=orange, critical=red.
+  if (status === "operational") return "resolved";
+  if (status === "outage") return "critical";
+  if (status === "degraded") return "major";
+  if (status === "maintenance") return "monitoring";
+  return "scheduled";
+}
+
+async function loadApps() {
+  const el = document.getElementById("apps-list");
   try {
-    const { days, uptimePct } = await fetchJSON("/api/uptime");
-    document.getElementById("uptime-pct").textContent = uptimePct;
-    const grid = document.getElementById("uptime-grid");
-    grid.innerHTML = days
-      .map((d) => `<div class="uptime-cell ${d.status !== "operational" ? d.status : ""}" title="${d.date}: ${d.status}"></div>`)
+    const { apps } = await fetchJSON("/api/apps");
+    if (!apps.length) {
+      el.innerHTML = '<div class="empty-state">No apps configured yet.</div>';
+      return;
+    }
+    el.innerHTML = apps
+      .map(
+        (a) => `<div class="card">
+          <h3>${escapeHtml(a.name)}</h3>
+          <div class="meta">
+            <span class="badge ${appStatusClass(a.last_status)}">${APP_STATUS_LABEL[a.last_status] || a.last_status}</span>
+            <a href="${escapeHtml(a.url)}" target="_blank" rel="noopener" style="color:var(--ink-soft)">${escapeHtml(a.url)}</a>
+            ${a.last_latency_ms ? ` · ${a.last_latency_ms}ms` : ""}
+          </div>
+          <div class="uptime-summary">
+            <span>Last 45 days</span>
+            <span><strong id="app-pct-${a.id}">--</strong>% uptime</span>
+          </div>
+          <div class="uptime-grid" id="app-grid-${a.id}"></div>
+        </div>`
+      )
       .join("");
+
+    await Promise.all(
+      apps.map(async (a) => {
+        try {
+          const { days, uptimePct } = await fetchJSON(`/api/apps/${a.id}/uptime`);
+          document.getElementById(`app-pct-${a.id}`).textContent = uptimePct;
+          document.getElementById(`app-grid-${a.id}`).innerHTML = days
+            .map((d) => `<div class="uptime-cell ${d.status !== "operational" ? d.status : ""}" title="${d.date}: ${d.status}"></div>`)
+            .join("");
+        } catch {
+          /* noop */
+        }
+      })
+    );
   } catch (e) {
-    /* noop */
+    el.innerHTML = '<div class="empty-state">Could not load apps.</div>';
   }
 }
 
@@ -137,7 +179,30 @@ document.querySelectorAll(".tab-btn").forEach((btn) => {
   });
 });
 
+document.getElementById("subscribe-form").addEventListener("submit", async (e) => {
+  e.preventDefault();
+  const email = document.getElementById("subscribe-email").value.trim();
+  const msg = document.getElementById("subscribe-msg");
+  const btn = document.getElementById("subscribe-btn");
+  btn.disabled = true;
+  try {
+    await fetchJSON("/api/subscribe", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ email }),
+    });
+    msg.textContent = "You're subscribed — you'll get an email on incidents and maintenance.";
+    msg.className = "subscribe-msg success";
+    document.getElementById("subscribe-email").value = "";
+  } catch {
+    msg.textContent = "Something went wrong. Please try again.";
+    msg.className = "subscribe-msg error";
+  } finally {
+    btn.disabled = false;
+  }
+});
+
 loadOverall();
 loadIncidents();
 loadMaintenance();
-loadUptime();
+loadApps();
