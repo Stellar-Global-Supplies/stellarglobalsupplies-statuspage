@@ -39,9 +39,46 @@ async function loadOverall() {
     const icon = document.getElementById("overall-icon");
     icon.className = "icon status-" + data.overall;
     icon.textContent = ICONS[data.overall] || "✓";
+    renderActiveBar(data.incidents || [], data.maintenances || []);
   } catch (e) {
     document.getElementById("overall-title").textContent = "Status unavailable";
   }
+}
+
+function goToTab(tabName) {
+  document.querySelectorAll(".tab-btn").forEach((b) => b.classList.toggle("active", b.dataset.tab === tabName));
+  document.querySelectorAll(".panel").forEach((p) => p.classList.toggle("active", p.id === "panel-" + tabName));
+}
+
+function renderActiveBar(incidents, maintenances) {
+  const bar = document.getElementById("active-bar");
+  if (!incidents.length && !maintenances.length) {
+    bar.style.display = "none";
+    bar.innerHTML = "";
+    return;
+  }
+
+  const incidentRows = incidents.map(
+    (i) => `<div class="active-row" data-tab="incidents">
+      <span class="dot orange"></span>
+      <span class="active-title">${escapeHtml(i.title)}</span>
+      <span class="active-meta">${i.status.replace("_", " ")} · ${i.impact}</span>
+    </div>`
+  );
+
+  const maintenanceRows = maintenances.map(
+    (m) => `<div class="active-row" data-tab="maintenance">
+      <span class="dot blue"></span>
+      <span class="active-title">${escapeHtml(m.title)}</span>
+      <span class="active-meta">${m.status.replace("_", " ")} · ends ${fmtDate(m.scheduled_end)}</span>
+    </div>`
+  );
+
+  bar.innerHTML = [...incidentRows, ...maintenanceRows].join("");
+  bar.style.display = "block";
+  bar.querySelectorAll(".active-row").forEach((row) => {
+    row.addEventListener("click", () => goToTab(row.dataset.tab));
+  });
 }
 
 function renderAppChips(apps) {
@@ -74,16 +111,18 @@ async function loadIncidents() {
       await Promise.all(
         incidents.map(async (i) => {
           const full = await fetchJSON(`/api/incidents/${i.id}`).then((r) => r.incident);
-          return `<div class="card">
-            <h3>${escapeHtml(i.title)}</h3>
-            <div class="meta">
-              <span class="badge ${i.status}">${i.status}</span>
-              <span class="badge ${i.impact}">${i.impact}</span>
-              Opened ${fmtDate(i.created_at)}${i.source === "github" ? '<span class="pill-source">GitHub PR #' + i.pr_number + "</span>" : ""}
-            </div>
-            <div style="margin-bottom:8px">${renderAppChips(full.apps)}</div>
-            ${renderUpdates(full.updates)}
-          </div>`;
+          return `<details class="card"${i.status !== "resolved" ? " open" : ""}>
+            <summary>
+              <h3>${escapeHtml(i.title)}</h3>
+              <div class="meta">
+                <span class="badge ${i.status}">${i.status}</span>
+                <span class="badge ${i.impact}">${i.impact}</span>
+                Opened ${fmtDate(i.created_at)}${i.source === "github" ? '<span class="pill-source">GitHub PR #' + i.pr_number + "</span>" : ""}
+              </div>
+              <div>${renderAppChips(full.apps)}</div>
+            </summary>
+            <div class="details-body">${renderUpdates(full.updates)}</div>
+          </details>`;
         })
       )
     ).join("");
@@ -104,16 +143,18 @@ async function loadMaintenance() {
       await Promise.all(
         maintenances.map(async (m) => {
           const full = await fetchJSON(`/api/maintenances/${m.id}`).then((r) => r.maintenance);
-          return `<div class="card">
-            <h3>${escapeHtml(m.title)}</h3>
-            <div class="meta">
-              <span class="badge ${m.status}">${m.status.replace("_", " ")}</span>
-              ${fmtDate(m.scheduled_start)} → ${fmtDate(m.scheduled_end)}
-              ${m.source === "github" ? '<span class="pill-source">GitHub PR #' + m.pr_number + "</span>" : ""}
-            </div>
-            <div style="margin-bottom:8px">${renderAppChips(full.apps)}</div>
-            ${renderUpdates(full.updates)}
-          </div>`;
+          return `<details class="card"${m.status !== "completed" && m.status !== "cancelled" ? " open" : ""}>
+            <summary>
+              <h3>${escapeHtml(m.title)}</h3>
+              <div class="meta">
+                <span class="badge ${m.status}">${m.status.replace("_", " ")}</span>
+                ${fmtDate(m.scheduled_start)} → ${fmtDate(m.scheduled_end)}
+                ${m.source === "github" ? '<span class="pill-source">GitHub PR #' + m.pr_number + "</span>" : ""}
+              </div>
+              <div>${renderAppChips(full.apps)}</div>
+            </summary>
+            <div class="details-body">${renderUpdates(full.updates)}</div>
+          </details>`;
         })
       )
     ).join("");
