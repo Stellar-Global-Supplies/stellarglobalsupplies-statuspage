@@ -285,7 +285,7 @@ app.post("/api/admin/apps", async (c) => {
   } catch {
     return badRequest("url must be a valid absolute URL");
   }
-  const id = await createApp(c.env, { name: body.name, url: body.url, sortOrder: body.sortOrder || 0 });
+  const id = await createApp(c.env, { name: body.name, url: body.url, sortOrder: body.sortOrder || 0, slug: body.slug });
   return json({ id }, { status: 201 });
 });
 
@@ -293,9 +293,13 @@ app.patch("/api/admin/apps/:id", async (c) => {
   const { error } = await requireAuth(c.req.raw, c.env);
   if (error) return error;
   const body = await c.req.json().catch(() => ({}));
-  const ok = await updateApp(c.env, c.req.param("id"), body);
-  if (!ok) return json({ error: "not found" }, { status: 404 });
-  return json({ ok: true });
+  try {
+    const ok = await updateApp(c.env, c.req.param("id"), body);
+    if (!ok) return json({ error: "not found" }, { status: 404 });
+    return json({ ok: true });
+  } catch (e) {
+    return badRequest(e.message);
+  }
 });
 
 app.delete("/api/admin/apps/:id", async (c) => {

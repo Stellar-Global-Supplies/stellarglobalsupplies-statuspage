@@ -7,72 +7,104 @@
 <link rel="stylesheet" href="/style.css" />
 </head>
 <body>
+
 <header class="top">
   <div class="top-inner">
     <div class="brand">
-      <div class="dot">SG</div>
-      <div class="brand-text">
-        <div class="title">Stellar Global Supplies</div>
-        <div class="subtitle">System Status</div>
-      </div>
+      <svg class="brand-star" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#00b98e" stroke="#00b98e" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <span class="brand-name">Stellar Global Supplies Status</span>
     </div>
     <div class="top-links">
-      <a href="https://www.stellarglobalsupplies.com/" target="_blank" rel="noopener">Main Site ↗</a>
-      <a href="/admin.html">Admin</a>
+      <a href="https://www.stellarglobalsupplies.com/" target="_blank" rel="noopener">stellarglobalsupplies.com ↗</a>
+      <button class="subscribe-btn-top" onclick="document.getElementById('subscribe-email').focus();document.getElementById('subscribe-section').scrollIntoView({behavior:'smooth'})">SUBSCRIBE TO UPDATES</button>
     </div>
   </div>
 </header>
 
 <main>
-  <div class="overall-banner" id="overall-banner">
-    <div class="icon status-operational" id="overall-icon">✓</div>
-    <div>
-      <h1 id="overall-title">Checking status…</h1>
-      <p id="overall-sub">Loading current status</p>
-    </div>
-  </div>
 
+  <!-- Active incident banner (shown only when incidents exist) -->
   <div id="active-bar" class="active-bar" style="display:none"></div>
 
-  <div class="subscribe-box card">
+  <!-- Overall status -->
+  <div class="overall-row">
+    <span class="overall-icon status-operational" id="overall-icon">✓</span>
     <div>
-      <strong>Get notified</strong>
-      <p style="margin:2px 0 0;font-size:12px;color:var(--ink-soft)">Email updates when there's an incident or scheduled maintenance.</p>
+      <h1 id="overall-title">Checking status…</h1>
+      <p id="overall-sub" class="overall-sub">Loading current status</p>
     </div>
-    <form id="subscribe-form">
-      <input type="email" id="subscribe-email" placeholder="you@company.com" required />
-      <button type="submit" class="primary" id="subscribe-btn">Subscribe</button>
-    </form>
-  </div>
-  <div id="subscribe-msg" class="subscribe-msg"></div>
-
-  <div class="tabs">
-    <button class="tab-btn active" data-tab="apps">Apps &amp; Uptime</button>
-    <button class="tab-btn" data-tab="incidents">Incidents</button>
-    <button class="tab-btn" data-tab="maintenance">Maintenance</button>
   </div>
 
-  <section class="panel active" id="panel-apps">
-    <div id="apps-list"><div class="empty-state">Checking apps…</div></div>
+  <!-- Uptime note -->
+  <div class="uptime-note">
+    Uptime over the past 90 days. <a href="#" onclick="goToTab('incidents');return false;">View historical incidents.</a>
+  </div>
+
+  <!-- Apps / uptime bars -->
+  <section id="panel-apps">
+    <div id="apps-list"><div class="empty-state">Checking services…</div></div>
     <div class="legend">
       <span><i style="background:#00b98e"></i> Operational</span>
       <span><i style="background:#3c8cf2"></i> Maintenance</span>
       <span><i style="background:#f2a93c"></i> Incident</span>
-      <span><i style="background:#e4483c"></i> Outage (live check failed)</span>
+      <span><i style="background:#e4483c"></i> Outage</span>
     </div>
   </section>
 
-  <section class="panel" id="panel-incidents">
+  <!-- Past Incidents heading -->
+  <div class="section-divider">
+    <h2 class="section-heading">Past Incidents</h2>
+  </div>
+
+  <!-- Tabs for incidents / maintenance -->
+  <div class="tabs">
+    <button class="tab-btn active" data-tab="incidents">Incidents</button>
+    <button class="tab-btn" data-tab="maintenance">Maintenance</button>
+  </div>
+
+  <section class="panel active" id="panel-incidents">
     <div id="incidents-list"><div class="empty-state">Loading incidents…</div></div>
   </section>
 
   <section class="panel" id="panel-maintenance">
     <div id="maintenance-list"><div class="empty-state">Loading maintenance windows…</div></div>
   </section>
+
+  <!-- Subscribe -->
+  <div id="subscribe-section" class="subscribe-section">
+    <p class="subscribe-label">Get email updates when Stellar Global Supplies creates or resolves an incident.</p>
+    <form id="subscribe-form">
+      <input type="email" id="subscribe-email" placeholder="you@company.com" required />
+      <button type="submit" class="subscribe-submit" id="subscribe-btn">Subscribe</button>
+    </form>
+    <div id="subscribe-msg" class="subscribe-msg"></div>
+  </div>
+
 </main>
 
 <footer class="foot">
-  Powered by a self-hosted status page on Cloudflare Workers, D1 &amp; KV · <a href="https://www.stellarglobalsupplies.com/" target="_blank" rel="noopener">stellarglobalsupplies.com</a>
+  <div class="foot-inner">
+    <div class="foot-brand">
+      <svg class="foot-star" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#00b98e" stroke="#00b98e" stroke-width="1.5" stroke-linejoin="round"/>
+      </svg>
+      <div>
+        <div class="foot-brand-name">Stellar Global Supplies</div>
+        <div class="foot-tagline">Powering global supply chains, one shipment at a time.</div>
+      </div>
+    </div>
+    <div class="foot-links">
+      <a href="https://www.stellarglobalsupplies.com/" target="_blank" rel="noopener">Main Site</a>
+      <a href="/admin.html">Admin</a>
+    </div>
+  </div>
+  <div class="foot-divider"></div>
+  <div class="foot-bottom">
+    <span>Engineered, designed and maintained by <a href="https://stellarforge.stellarglobalsupplies.com/" target="_blank" rel="noopener">Stellar Forge</a> — <em>Building the tools that keep Stellar running.</em></span>
+    <span class="foot-infra">Hosted on Cloudflare Workers · D1 &amp; KV</span>
+  </div>
 </footer>
 
 <script src="/app.js"></script>

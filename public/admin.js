@@ -229,11 +229,13 @@ window.completeMaintenance = async function (id) {
 document.getElementById("app-create").addEventListener("click", async () => {
   const name = document.getElementById("app-name").value.trim();
   const url = document.getElementById("app-url").value.trim();
+  const slug = document.getElementById("app-slug").value.trim();
   if (!name || !url) return alert("Name and URL are required");
   try {
-    await api("/api/admin/apps", { method: "POST", body: JSON.stringify({ name, url }) });
+    await api("/api/admin/apps", { method: "POST", body: JSON.stringify({ name, url, slug: slug || undefined }) });
     document.getElementById("app-name").value = "";
     document.getElementById("app-url").value = "";
+    document.getElementById("app-slug").value = "";
     loadAdminApps();
   } catch (e) {
     alert(e.message);
@@ -257,10 +259,12 @@ async function loadAdminApps() {
       <h3>${escapeHtml(a.name)} ${a.active ? "" : '<span class="pill-source">Paused</span>'}</h3>
       <div class="meta">
         ${escapeHtml(a.url)}<br/>
+        Slug: <code>${escapeHtml(a.slug || "—")}</code> — use <code>app:${escapeHtml(a.slug || "")}</code> as a PR label<br/>
         Last check: <span class="badge ${a.last_status === "operational" ? "resolved" : a.last_status === "outage" ? "critical" : "scheduled"}">${a.last_status}</span>
         ${a.last_checked_at ? fmtDate(a.last_checked_at) : "never"}
       </div>
       <button class="secondary" onclick="toggleApp(${a.id}, ${a.active ? 0 : 1})">${a.active ? "Pause" : "Resume"}</button>
+      <button class="secondary" onclick="editAppSlug(${a.id}, '${escapeHtml(a.slug || "")}')">Edit slug</button>
       <button class="secondary" onclick="deleteAppRow(${a.id})">Delete</button>
     </div>`
     )
@@ -303,6 +307,17 @@ function getSelectedAppIds(containerId) {
 window.toggleApp = async function (id, active) {
   await api(`/api/admin/apps/${id}`, { method: "PATCH", body: JSON.stringify({ active: !!active }) });
   loadAdminApps();
+};
+
+window.editAppSlug = async function (id, currentSlug) {
+  const next = prompt("New slug (used as app:<slug> in PR labels):", currentSlug);
+  if (next === null || next.trim() === "" || next.trim() === currentSlug) return;
+  try {
+    await api(`/api/admin/apps/${id}`, { method: "PATCH", body: JSON.stringify({ slug: next.trim() }) });
+    loadAdminApps();
+  } catch (e) {
+    alert(e.message);
+  }
 };
 
 window.deleteAppRow = async function (id) {

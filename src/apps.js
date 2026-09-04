@@ -19,11 +19,11 @@ export async function listApps(env, { onlyActive = false } = {}) {
   return results || [];
 }
 
-export async function createApp(env, { name, url, sortOrder = 0 }) {
-  const baseSlug = slugify(name) || "app";
+export async function createApp(env, { name, url, sortOrder = 0, slug: customSlug }) {
+  const baseSlug = slugify(customSlug || name) || "app";
   let slug = baseSlug;
   let n = 2;
-  // Handle rare slug collisions (two apps with very similar names).
+  // Handle rare slug collisions (two apps with very similar names/slugs).
   while (await env.DB.prepare("SELECT 1 FROM apps WHERE slug = ?").bind(slug).first()) {
     slug = `${baseSlug}-${n++}`;
   }
@@ -49,17 +49,26 @@ export async function findAppIdsBySlugs(env, slugs) {
   return (results || []).map((r) => r.id);
 }
 
-export async function updateApp(env, id, { name, url, active, sortOrder }) {
+export async function updateApp(env, id, { name, url, active, sortOrder, slug }) {
   const app = await env.DB.prepare("SELECT * FROM apps WHERE id = ?").bind(id).first();
   if (!app) return null;
+
+  let newSlug = app.slug;
+  if (slug !== undefined && slug !== null && slug !== "") {
+    newSlug = slugify(slug);
+    const clash = await env.DB.prepare("SELECT id FROM apps WHERE slug = ? AND id != ?").bind(newSlug, id).first();
+    if (clash) throw new Error(`Slug "${newSlug}" is already used by another app`);
+  }
+
   await env.DB.prepare(
-    "UPDATE apps SET name = ?, url = ?, active = ?, sort_order = ? WHERE id = ?"
+    "UPDATE apps SET name = ?, url = ?, active = ?, sort_order = ?, slug = ? WHERE id = ?"
   )
     .bind(
       name ?? app.name,
       url ?? app.url,
       active === undefined ? app.active : active ? 1 : 0,
       sortOrder ?? app.sort_order,
+      newSlug,
       id
     )
     .run();
